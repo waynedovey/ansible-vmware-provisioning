@@ -7,3 +7,5 @@ server_ip: 192.168.0.2
 net_type: static
 netmask: 255.255.255.0
 gateway: 192.168.0.1
+domain: test.gsslab.pek2.redhat.com
+dns_servers: 192.168.0.1
