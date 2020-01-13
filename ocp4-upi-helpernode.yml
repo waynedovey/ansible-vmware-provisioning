@@ -1,0 +1,9 @@
+name: ocp4-upi-helpernode
+new_vm: ocp4-upi-helpernode
+cpu: 1
+mem_mb: 2048
+disk: 16
+server_ip: 192.168.0.2
+net_type: static
+netmask: 255.255.255.0
+gateway: 192.168.0.1
