@@ -20,7 +20,7 @@
       username: "{{ vcenter_username }}"
       password: "{{ vcenter_password }}"
       datacenter: "{{ datacenter }}"
-      name: "{{ name }}"
+      name: "{{ vm_name }}"
       folder: "{{ folder }}"
       template: "{{ vmtemplate }}"
       state: poweredon
@@ -46,7 +46,7 @@
       username: "{{ vcenter_username }}"
       password: "{{ vcenter_password }}"
       datacenter: "{{ datacenter }}"
-      name: "{{ name }}"
+      name: "{{ vm_name }}"
       folder: "{{ folder }}"
       template: "{{ vmtemplate }}"
       state: poweredon
@@ -121,9 +121,9 @@
 
   - name: "INVENTORY | Update the inventory file (case == DHCP)"
     lineinfile:
-      line: "{{ name }} ansible_host={{ new_vm.instance.ipv4 }}"
+      line: "{{ vm_name }} ansible_host={{ new_vm.instance.ipv4 }}"
       path: "~/Documents/gitworking/ansible-vmware-provisioning/hosts"
-      regexp: "{{ name }}.*"
+      regexp: "{{ vm_name }}.*"
       state: present
       validate: 'ansible-inventory --list -i %s'
     delegate_to: localhost
@@ -132,9 +132,9 @@
 
   # - name: "INVENTORY | Update the inventory file (case == static addressing)"
   #   lineinfile:
-  #     line: "{{ name }} ansible_host={{ server_ip }}"
+  #     line: "{{ vm_name }} ansible_host={{ server_ip }}"
   #     path: "~/Documents/gitworking/ansible-vmware-provisioning/hosts"
-  #     regexp: "{{ name }}.*"
+  #     regexp: "{{ vm_name }}.*"
   #     state: present
   #     validate: 'ansible-inventory --list -i %s'
   #   delegate_to: localhost

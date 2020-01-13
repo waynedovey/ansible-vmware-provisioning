@@ -21,7 +21,7 @@
       password: "{{ vcenter_password }}"
       datacenter: "{{ datacenter }}"
       folder: /templates
-      vm_id: "{{ name }}"
+      vm_id: "{{ vm_name }}"
       vm_username: root
       vm_password: "{{ rooter }}"
       vm_shell: "{{ item.cmd }}"
@@ -50,7 +50,7 @@
       username: "{{ vcenter_username }}"
       password: "{{ vcenter_password }}"
       datacenter: "{{ datacenter }}"
-      name: "{{ name }}"
+      name: "{{ vm_name }}"
       folder: /templates
       is_template: true
       state: present
