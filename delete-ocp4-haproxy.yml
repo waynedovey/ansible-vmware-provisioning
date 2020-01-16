@@ -1,0 +1,41 @@
+---
+# This should work on Ansible >2.2
+
+- hosts: all
+  gather_facts: false
+  connection: local
+  vars:
+    ansible_python_interpreter: "{{ansible_playbook_python}}"
+
+  tasks:
+  - name: "INCLUDES | Include vaulted credentials"
+    include_vars: group_vars/vaulted.yml
+    no_log: true
+
+  - name: "POWER | Power off VM"
+    vmware_guest:
+      validate_certs: "{{ validate_certs }}"
+      hostname: "{{ vcenter_host }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      datacenter: "{{ datacenter }}"
+      name: "{{ item }}"
+      state: poweredoff
+      cluster: "{{ cluster|default('homefarm_cluster') }}"
+    with_items:
+      - ocp4-haproxy
+    ignore_errors: true
+
+  - name: "DELETE | Remove VM from Cluster"
+    vmware_guest:
+      validate_certs: "{{ validate_certs }}"
+      hostname: "{{ vcenter_host }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      datacenter: "{{ datacenter }}"
+      name: "{{ item }}"
+      state: absent
+      cluster: "{{ cluster|default('homefarm_cluster') }}"
+    with_items:
+      - ocp4-haproxy
+    ignore_errors: true

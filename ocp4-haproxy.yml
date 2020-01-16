@@ -1,0 +1,18 @@
+vm_name: ocp4-haproxy
+new_vm: ocp4-haproxy
+cpu: 1
+mem_mb: 2048
+disk: 16
+net_type: dhcp
+vmtemplate: rhel7.7-template2
+port_grp_ext: VM Network
+port_grp_int: OpenShift-Network
+datastore: datastore1
+haproxy_bind_nonlocal_ip: true
+haproxy_ip_forward: true
+haproxy_fw_ports:
+  - "443/tcp"
+  - "6443/tcp"
+  - "80/tcp"
+  - "22623/tcp"
+  - "9000/tcp"

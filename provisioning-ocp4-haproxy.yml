@@ -1,0 +1,171 @@
+---
+# This should work on Ansible >2.2
+
+# First, Do all of the provisioning and add the hosts to in-memory inventory
+- hosts: all
+  gather_facts: false
+  connection: local
+  vars:
+    ansible_python_interpreter: "{{ansible_playbook_python}}"
+
+  tasks:
+  - name: "INCLUDES | Include vaulted credentials"
+    include_vars: group_vars/vaulted.yml
+    no_log: true
+
+  - name: "PROVISION | Create VM from template"
+    vmware_guest:
+      validate_certs: "{{ validate_certs }}"
+      hostname: "{{ vcenter_host }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      datacenter: "{{ datacenter }}"
+      name: "{{ vm_name }}"
+      folder: "{{ folder }}"
+      template: "{{ vmtemplate }}"
+      state: poweredon
+      esxi_hostname: esxi-196.test.gsslab.pek2.redhat.com
+      annotation: '{{ vmnotes|default("Nothing significant to report") }}'
+      #cluster: "{{ cluster|default('homefarm_cluster') }}"
+      hardware:
+        num_cpus: "{{ cpu }}"
+        memory_mb: "{{ mem_mb }}"
+      disk:
+      - size_gb: "{{ disk }}"
+        type: thin
+        datastore: "{{ datastore }}"
+      networks:
+      - name: "{{ port_grp_ext }}"
+      - name: "{{ port_grp_int }}"
+      wait_for_ip_address: yes
+    register: dyn_vm
+    when: net_type == 'dhcp'
+
+  - name: "PROVISION | Create VM from template"
+    vmware_guest:
+      validate_certs: "{{ validate_certs }}"
+      hostname: "{{ vcenter_host }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      datacenter: "{{ datacenter }}"
+      name: "{{ vm_name }}"
+      folder: "{{ folder }}"
+      template: "{{ vmtemplate }}"
+      state: poweredon
+      annotation: '{{ vmnotes|default("Nothing significant to report") }}'
+      cluster: "{{ cluster|default('homefarm_cluster') }}"
+      hardware:
+        num_cpus: "{{ cpu }}"
+        memory_mb: "{{ mem_mb }}"
+      disk:
+      - size_gb: "{{ disk }}"
+        type: thin
+        datastore: "{{ datastore }}"
+      networks:
+      - name: "{{ port_grp }}"
+        type: "{{ net_type }}"
+        ip: "{{ server_ip }}"
+        netmask: "{{ netmask }}"
+        gateway: "{{ gateway }}"
+        domain: "{{ domain }}"
+        dns_servers:
+        - "{{ dns_servers }}"
+      customization:
+        dns_servers:
+        - "{{ dns_servers }}"
+        domain: "{{ domain }}"
+      wait_for_ip_address: yes
+    register: stat_vm
+    when: net_type == 'static'
+
+#  - debug:
+#      msg: "{{ dyn_vm }}"
+
+  - name: "INVENTORY | Update temp inventory with new host"
+    add_host:
+      name: "{{ item.instance.hw_name }}"
+      ansible_ssh_host: "{{ item.instance.hw_eth0.ipaddresses[0] }}"
+      groups: stage1
+    with_items:
+      - "{{ dyn_vm }}"
+    when: net_type == 'dhcp'
+
+  - name: "INVENTORY | Update temp inventory with new host"
+    add_host:
+      name: "{{ item.instance.hw_name }}"
+      ansible_ssh_host: "{{ item.instance.hw_eth0.ipaddresses[0] }}"
+      groups: stage1
+    with_items:
+      - "{{ stat_vm }}"
+    when: net_type == 'static'
+
+# Configure VM
+- hosts: stage1
+  gather_facts: true
+  connection: smart
+  become: true
+
+  tasks:
+  - name: "COMMAND | set hostname"
+    hostname:
+      name: "{{ vm_name }}"
+
+  - name: "COMMAND | configure service"
+    template:
+      src: files/ifcfg-ens224.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-ens224
+
+  - name: "COMMAND | restart network"
+    service:
+      name: network
+      state: restarted
+      enabled: true
+
+  - name: "COMMAND | SElinux"
+    command: "setsebool -P haproxy_connect_any=1"
+
+  - name: "COMMAND | install packages"
+    yum:
+      name:
+        - haproxy
+      state: present
+
+  - name: "COMMAND | configure service"
+    template:
+      src: files/haproxy.cfg.j2
+      dest: /etc/haproxy/haproxy.cfg
+      validate: 'haproxy -f %s -c'
+
+  - name: "COMMAND | service update"
+    sysctl:
+      name: net.ipv4.ip_nonlocal_bind
+      value: '1'
+      sysctl_file: /etc/sysctl.d/10-ip_nonlocal_bind.conf
+      sysctl_set: true
+      reload: true
+      state: present
+    when: haproxy_bind_nonlocal_ip | bool
+
+  - name: "COMMAND | service update"
+    sysctl:
+      name: net.ipv4.ip_forward
+      value: '1'
+      sysctl_file: /etc/sysctl.d/10-ip_forward.conf
+      sysctl_set: true
+      reload: true
+      state: present
+    when: haproxy_ip_forward | bool
+
+  - name: "COMMAND | start service"
+    service:
+      name: haproxy
+      state: restarted
+      enabled: true
+
+  - name: "COMMAND | FirewallD Setup"
+    firewalld:
+      port: '{{ item }}'
+      permanent: true
+      state: enabled
+      immediate: true
+    with_items: "{{ haproxy_fw_ports }}"

@@ -10,3 +10,4 @@ gateway: 192.168.0.1
 domain: lab.gsslab.pek2.redhat.com
 dns_servers: 192.168.0.1
 vmtemplate: ocp4-upi-helpernode-template
+mac_add: 00:50:56:ab:b8:29

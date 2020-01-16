@@ -35,6 +35,7 @@
         datastore: "{{ datastore }}"
       networks:
       - name: "{{ port_grp }}"
+        mac: "{{ mac_add }}"
       wait_for_ip_address: yes
     register: dyn_vm
     when: net_type == 'dhcp'
