@@ -1,0 +1,13 @@
+---
+
+# VCenter Stuff
+vcenter_username: administrator@vsphere.local
+validate_certs: false
+vcenter_host: vspherehost
+datacenter: test
+cluster: vmware-testcluster
+datastore: "example"
+vmtemplate: rhel7.7-template
+#folder: /bootstrap-services
+folder: ""
+port_grp: "OpenShift-Network"
