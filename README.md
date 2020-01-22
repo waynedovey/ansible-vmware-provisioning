@@ -9,4 +9,6 @@ ansible-playbook delete-cluster.yml --ask-vault-pass
 
 ansible-playbook delete-ocp4-haproxy.yml --ask-vault-pass
 
+# Reboot 
 
+ansible-playbook reboot-cluster.yml --ask-vault-pass
