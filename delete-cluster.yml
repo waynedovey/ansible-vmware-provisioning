@@ -28,8 +28,11 @@
       - master1
       - master2
       - worker0
-#      - worker1
-#      - worker2
+      - worker1
+      - worker2
+      - storage0
+      - storage1
+      - storage2
     ignore_errors: true
 
   - name: "DELETE | Remove VM from Cluster"
@@ -48,6 +51,9 @@
       - master1
       - master2
       - worker0
-#      - worker1
-#      - worker2
+      - worker1
+      - worker2
+      - storage0
+      - storage1
+      - storage2
     ignore_errors: true
