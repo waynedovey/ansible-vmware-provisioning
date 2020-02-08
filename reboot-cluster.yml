@@ -24,9 +24,9 @@
       cluster: "{{ cluster|default('homefarm_cluster') }}"
     with_items:
 #      - bootstrap
-      - master0
-      - master1
-      - master2
+#      - master0
+#      - master1
+#      - master2
       - worker0
       - worker1
       - worker2
